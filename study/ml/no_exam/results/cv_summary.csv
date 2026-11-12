@@ -1,0 +1,13 @@
+,,train_auc,train_auc,val_auc,val_auc,val_auc_fold
+,,mean,std,mean,std,std
+feature_set,model,,,,,
+exam+month,interaction,0.6417,0.0005,0.6208,0.0049,0.017
+exam+month,mlp,0.6706,0.0028,0.6124,0.0035,0.0147
+exam,interaction,0.623,0.0002,0.6093,0.0056,0.0161
+exam+month,linear,0.6243,0.0007,0.6086,0.0064,0.0157
+exam,table,0.628,0.0003,0.6056,0.0053,0.0165
+exam+month,table,0.6579,0.0005,0.6041,0.0036,0.0142
+exam,linear,0.6146,0.0004,0.6021,0.0061,0.0161
+exam,mlp,0.638,0.0006,0.601,0.0054,0.0174
+exam,rate (참고),0.6469,0.0004,0.5904,0.0067,0.0182
+exam+month,rate (참고),0.792,0.0004,0.5226,0.0038,0.0234

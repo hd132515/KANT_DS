@@ -1,0 +1,44 @@
+rep 0 fold 0 (13s): mlp 0.6904  logreg 0.6929  hgb 0.6934  no_exam 0.6356  | all 0.7017
+rep 0 fold 1 (14s): mlp 0.7057  logreg 0.6908  hgb 0.6902  no_exam 0.6266  | all 0.7005
+rep 0 fold 2 (14s): mlp 0.6700  logreg 0.6613  hgb 0.6608  no_exam 0.6137  | all 0.6704
+rep 0 fold 3 (14s): mlp 0.6328  logreg 0.6429  hgb 0.6394  no_exam 0.6153  | all 0.6494
+rep 0 fold 4 (14s): mlp 0.6677  logreg 0.6764  hgb 0.6810  no_exam 0.5948  | all 0.6735
+rep 1 fold 0 (13s): mlp 0.6863  logreg 0.6763  hgb 0.6827  no_exam 0.6289  | all 0.6832
+rep 1 fold 1 (13s): mlp 0.6883  logreg 0.6838  hgb 0.6744  no_exam 0.6294  | all 0.6922
+rep 1 fold 2 (15s): mlp 0.6707  logreg 0.6828  hgb 0.6988  no_exam 0.6157  | all 0.6896
+rep 1 fold 3 (13s): mlp 0.6665  logreg 0.6826  hgb 0.6870  no_exam 0.5953  | all 0.6789
+rep 1 fold 4 (15s): mlp 0.6639  logreg 0.6545  hgb 0.6800  no_exam 0.6133  | all 0.6712
+rep 2 fold 0 (17s): mlp 0.6952  logreg 0.6813  hgb 0.6594  no_exam 0.6381  | all 0.6878
+rep 2 fold 1 (15s): mlp 0.6922  logreg 0.6973  hgb 0.6801  no_exam 0.6601  | all 0.7067
+rep 2 fold 2 (15s): mlp 0.6565  logreg 0.6625  hgb 0.6624  no_exam 0.6199  | all 0.6713
+rep 2 fold 3 (16s): mlp 0.7003  logreg 0.6905  hgb 0.6679  no_exam 0.6199  | all 0.6915
+rep 2 fold 4 (16s): mlp 0.6725  logreg 0.6628  hgb 0.6766  no_exam 0.5914  | all 0.6710
+rep 3 fold 0 (14s): mlp 0.6962  logreg 0.7047  hgb 0.7060  no_exam 0.6315  | all 0.7055
+rep 3 fold 1 (15s): mlp 0.6873  logreg 0.6834  hgb 0.6773  no_exam 0.6616  | all 0.6986
+rep 3 fold 2 (17s): mlp 0.6814  logreg 0.6760  hgb 0.6869  no_exam 0.6108  | all 0.6836
+rep 3 fold 3 (16s): mlp 0.6817  logreg 0.6848  hgb 0.6774  no_exam 0.6148  | all 0.6843
+rep 3 fold 4 (18s): mlp 0.6819  logreg 0.6628  hgb 0.6726  no_exam 0.6131  | all 0.6774
+rep 4 fold 0 (14s): mlp 0.6676  logreg 0.6638  hgb 0.6715  no_exam 0.6123  | all 0.6751
+rep 4 fold 1 (19s): mlp 0.6984  logreg 0.6994  hgb 0.6921  no_exam 0.6334  | all 0.7056
+rep 4 fold 2 (18s): mlp 0.6871  logreg 0.6825  hgb 0.6706  no_exam 0.6085  | all 0.6815
+rep 4 fold 3 (17s): mlp 0.6758  logreg 0.6721  hgb 0.6720  no_exam 0.6179  | all 0.6785
+rep 4 fold 4 (17s): mlp 0.6726  logreg 0.6531  hgb 0.6817  no_exam 0.6179  | all 0.6753
+
+[val AUC, 반복 간 mean ± std / 폴드 std / 최고 단일(mlp) 대비 짝 차이·우위 폴드 수]
+                               mean     std  fold_std  vs_best_single   wins
+combo                  size                                                 
+mlp+logreg+hgb         3     0.6867  0.0038    0.0141          0.0072  22/25
+mlp+hgb                2     0.6861  0.0042    0.0135          0.0066  22/25
+logreg+hgb             2     0.6856  0.0042    0.0141          0.0061  17/25
+mlp+logreg+hgb+no_exam 4     0.6842  0.0040    0.0139          0.0046  18/25
+mlp+logreg             2     0.6814  0.0042    0.0153          0.0018  15/25
+mlp+hgb+no_exam        3     0.6811  0.0041    0.0136          0.0016  13/25
+logreg+hgb+no_exam     3     0.6809  0.0038    0.0141          0.0013  12/25
+mlp                    1     0.6795  0.0053    0.0161          0.0000   0/25
+hgb                    1     0.6777  0.0067    0.0139         -0.0019  12/25
+mlp+logreg+no_exam     3     0.6774  0.0049    0.0152         -0.0021  10/25
+logreg                 1     0.6768  0.0038    0.0156         -0.0027  10/25
+hgb+no_exam            2     0.6693  0.0041    0.0139         -0.0102   6/25
+mlp+no_exam            2     0.6680  0.0056    0.0160         -0.0115   4/25
+logreg+no_exam         2     0.6670  0.0048    0.0159         -0.0126   4/25
+no_exam                1     0.6208  0.0049    0.0170         -0.0587   0/25

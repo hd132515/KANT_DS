@@ -1,0 +1,319 @@
+<title>학습 회원 이탈 예측</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 레이아웃: 한 줄 읽기 폭의 보고서 본문, 그림은 흰 '도판'으로 본문보다 넓게, 장 번호는 실제 읽는 순서 */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #1b2330;
+  --muted: #5a6474;
+  --rule: #d9dee6;
+  --stay: #2a78d6;       /* 잔류 · 차트 파랑 */
+  --churn: #d9581f;      /* 이탈 · 차트 주황 */
+  --stay-soft: #e3eefb;
+  --churn-soft: #fbe9df;
+  --plate: #ffffff;      /* 그림 배경은 테마와 무관하게 흰색 (그림 자체가 흰 바탕) */
+  --font-display: "Gowun Batang", "AppleMyungjo", "Noto Serif KR", serif;
+  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --step--1: 0.875rem;
+  --step-0: 1.0625rem;
+  --step-1: 1.3rem;
+  --step-2: 1.7rem;
+  --step-3: 2.3rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161c; --surface: #1a2028; --fg: #e5e9ef; --muted: #9ba5b3; --rule: #2c3440;
+    --stay: #5598e7; --churn: #f07a4a; --stay-soft: #1d2b3d; --churn-soft: #3a2419;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161c; --surface: #1a2028; --fg: #e5e9ef; --muted: #9ba5b3; --rule: #2c3440;
+  --stay: #5598e7; --churn: #f07a4a; --stay-soft: #1d2b3d; --churn-soft: #3a2419;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: var(--step-0); line-height: 1.75;
+  word-break: keep-all; overflow-wrap: anywhere;
+}
+.page {
+  max-width: 46rem; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 3.5rem 5rem;
+  display: flex; flex-direction: column; gap: 3.5rem;
+}
+h1, h2, h3 { font-family: var(--font-display); font-weight: 700; line-height: 1.3; text-wrap: balance; margin: 0; }
+h1 { font-size: var(--step-3); }
+h2 { font-size: var(--step-2); display: flex; gap: 0.6rem; align-items: baseline; }
+h2 .no { font-family: var(--font-mono); font-size: var(--step-0); color: var(--muted); font-weight: 400; }
+h3 { font-size: var(--step-1); }
+p { margin: 0; }
+section { display: flex; flex-direction: column; gap: 1.25rem; }
+.sub { display: flex; flex-direction: column; gap: 1rem; padding-top: 0.75rem; }
+.eyebrow { font-size: var(--step--1); letter-spacing: 0.06em; color: var(--muted); }
+.lede { font-size: var(--step-1); color: var(--muted); line-height: 1.6; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.stay { color: var(--stay); font-weight: 600; }
+.churn { color: var(--churn); font-weight: 600; }
+.muted { color: var(--muted); }
+hr { border: 0; border-top: 1px solid var(--rule); margin: 0; }
+
+header { display: flex; flex-direction: column; gap: 1rem; }
+header .meta { font-size: var(--step--1); color: var(--muted); }
+
+/* 한눈에 보기: 페이지의 유일한 상자 강조 */
+.glance { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 1.25rem 1.4rem; display: flex; flex-direction: column; gap: 0.9rem; }
+.glance h2 { font-size: var(--step-1); }
+.glance ol { margin: 0; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; }
+
+figure { margin: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+.plate { background: var(--plate); border: 1px solid var(--rule); border-radius: 4px; padding: 0.75rem; }
+.plate img { display: block; width: 100%; height: auto; }
+.plate.narrow { max-width: 30rem; }
+/* 가로로 긴 그림은 본문 폭을 벗어나 넓게 (화면 폭 − 양쪽 16px 를 넘지 않음) */
+figure.wide { width: min(64rem, calc(100vw - 32px)); margin-left: 50%; transform: translateX(-50%); }
+figcaption { font-size: var(--step--1); color: var(--muted); line-height: 1.6; }
+figcaption b { color: var(--fg); font-weight: 600; }
+
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: var(--step--1); }
+th, td { text-align: left; padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 600; color: var(--muted); font-size: 0.8rem; letter-spacing: 0.03em; }
+td.r, th.r { text-align: right; }
+tr.hl td { background: var(--churn-soft); }
+
+/* 기간 도식 */
+.timeline { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.4rem; font-size: var(--step--1); }
+.timeline div { border-top: 3px solid var(--stay); padding-top: 0.4rem; min-width: 0; }
+.timeline div:last-child { border-top-color: var(--churn); }
+.timeline b { display: block; font-family: var(--font-mono); font-weight: 500; }
+
+.note { border-left: 3px solid var(--churn); padding-left: 1rem; color: var(--fg); }
+.note b { color: var(--churn); }
+
+dl.terms { margin: 0; display: grid; grid-template-columns: minmax(6rem, max-content) minmax(0, 1fr); gap: 0.7rem 1.2rem; font-size: var(--step--1); }
+dl.terms dt { font-weight: 600; }
+dl.terms dd { margin: 0; color: var(--muted); }
+
+.chart svg { width: 100%; height: auto; display: block; }
+.chart text { font-family: var(--font-body); font-size: 13px; fill: var(--fg); }
+.chart .tick { font-family: var(--font-mono); font-size: 11px; fill: var(--muted); }
+.chart .val { font-family: var(--font-mono); font-size: 12.5px; }
+.chart .grid { stroke: var(--rule); stroke-width: 1; }
+.chart .bar { fill: var(--stay); opacity: 0.55; }
+.chart .bar.best { opacity: 1; }
+.chart .base { stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 3 3; }
+
+@media (max-width: 560px) {
+  .timeline { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  dl.terms { grid-template-columns: minmax(0, 1fr); gap: 0.2rem; }
+  dl.terms dd { margin-bottom: 0.6rem; }
+}
+</style>
+
+<div class="page">
+
+<header>
+  <span class="eyebrow">모델 개발 보고서 · 1차 · 2026-11-11</span>
+  <h1>학습 회원 이탈 예측</h1>
+  <p class="lede">온라인 학습 서비스 회원의 최근 3개월 기록을 보고, 누가 곧 그만둘지 미리 알아낼 수 있을까?</p>
+</header>
+
+<div class="glance">
+  <h2>한눈에 보기</h2>
+  <ol>
+    <li>회원 30,664명 중 <span class="churn">868명(2.8%)</span>이 그만뒀습니다. 그만두는 사람이 아주 드물어서 맞히기 어려운 문제입니다.</li>
+    <li>그만두기 직전 달에 <b>공부 횟수와 학력 지수가 뚝 떨어집니다.</b> 가장 강한 신호입니다.</li>
+    <li>시험 점수 자체는 거의 차이가 없습니다. 대신 <b>시험 2·3을 보지 않은 회원</b>이 그만둘 확률이 약 2배 높습니다.</li>
+    <li>최종 모델은 성격이 다른 모델 세 개의 의견을 합친 것으로, 성능 점수(AUC) <span class="num">0.687</span>입니다. 동전 던지기가 <span class="num">0.5</span>, 완벽한 예측이 <span class="num">1.0</span>입니다.</li>
+  </ol>
+</div>
+
+<section>
+  <h2><span class="no">1</span>무엇을 예측하나</h2>
+  <p>한 온라인 학습 서비스의 회원 기록입니다. 회원마다 서비스를 이용한 기간, 나이, 그리고 <b>마지막 3개월</b> 동안의 학습 기록이 있습니다. 각 회원이 결국 <span class="churn">그만뒀는지(이탈)</span> <span class="stay">계속 다니는지(잔류)</span>가 정답으로 붙어 있습니다.</p>
+
+  <div class="timeline" role="img" aria-label="세 달 전부터 직전 달까지의 기록 뒤에 이탈 또는 잔류가 결정된다">
+    <div><b>M3</b>세 달 전</div>
+    <div><b>M2</b>두 달 전</div>
+    <div><b>M1</b>직전 달</div>
+    <div><b>판정</b>이탈 / 잔류</div>
+  </div>
+
+  <p>매달 기록되는 항목은 다섯 가지입니다.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>항목</th><th>뜻</th></tr></thead>
+      <tbody>
+        <tr><td>StudyCnt</td><td>그 달에 공부한 횟수</td></tr>
+        <tr><td>StudyIndex</td><td>학력 지수 (0–100, 높을수록 학력이 높음)</td></tr>
+        <tr><td>Exam1 · Exam2 · Exam3</td><td>세 종류 시험의 점수. 시험을 보지 않은 달은 비어 있습니다.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>이 밖에 서비스 이용 기간(Month, 1–39개월)과 나이(AGE)가 있습니다.</p>
+
+  <figure>
+    <div class="plate narrow">@@img:survived@@</div>
+    <figcaption><b>그만둔 회원은 100명 중 3명꼴입니다.</b> "모두 계속 다닌다"고 찍기만 해도 97%를 맞히기 때문에, 맞힌 비율(정확도)로는 모델을 평가할 수 없습니다. 그래서 아래의 AUC를 씁니다.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2><span class="no">2</span>성능은 어떻게 재나</h2>
+  <div class="sub">
+    <h3>AUC: 두 사람 중 누가 그만둘지 맞힐 확률</h3>
+    <p>그만둔 회원 한 명과 계속 다니는 회원 한 명을 무작위로 뽑아 모델에게 보여 줍니다. 모델이 그만둔 쪽을 "더 위험하다"고 고르면 정답입니다. 이걸 가능한 모든 쌍에 대해 해 본 정답률이 <b>AUC</b>입니다.</p>
+    <p><span class="num">0.5</span>는 동전 던지기와 같고 <span class="num">1.0</span>은 완벽합니다. 이 보고서의 결과는 <span class="num">0.6–0.69</span> 사이입니다. 사람의 행동처럼 기록에 드러나지 않는 이유가 많은 문제에서는 흔한 수준입니다.</p>
+  </div>
+  <div class="sub">
+    <h3>교차검증: 처음 보는 회원으로 시험 보기</h3>
+    <p>모델이 학습한 회원으로 점수를 매기면 답을 외운 학생처럼 점수가 부풀려집니다. 그래서 회원을 다섯 묶음으로 나눠 네 묶음으로 학습하고, 남은 한 묶음으로 채점합니다. 묶음을 바꿔 가며 다섯 번 하고, 묶음을 나누는 방식도 다섯 번 바꿔 모두 <span class="num">25</span>번 채점한 평균을 씁니다.</p>
+    <p>채점할 때마다 점수가 <span class="num">±0.015</span> 정도 흔들립니다. 그래서 두 모델의 차이가 이보다 작으면, 같은 묶음끼리 비교해 몇 번 이겼는지로 판단했습니다.</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="no">3</span>데이터에서 찾은 것</h2>
+
+  <div class="sub">
+    <h3>그만두기 직전 달, 공부가 줄어든다</h3>
+    <p>그만둔 회원과 남은 회원의 기록을 나란히 놓고 비교했습니다. 가장 큰 차이는 <b>직전 달(M1)의 학력 지수와 공부 횟수</b>에서 나왔습니다. 세 달 전에는 차이가 작다가 직전 달로 갈수록 벌어집니다.</p>
+    <figure>
+      <div class="plate narrow">@@img:studyindex_m1@@</div>
+      <figcaption><b>직전 달 학력 지수.</b> 상자는 가운데 절반의 회원이 있는 범위이고, 상자 안의 굵은 선은 한가운데 값(중앙값)입니다. 그만둔 회원의 중앙값은 <span class="num">49.5</span>, 남은 회원은 <span class="num">63</span>입니다. 같은 차이가 세 달 전에는 <span class="num">5</span>점, 두 달 전에는 <span class="num">7</span>점, 직전 달에는 <span class="num">13.5</span>점입니다.</figcaption>
+    </figure>
+    <p>항목 하나만으로 AUC를 재 보면 각 항목이 얼마나 쓸모 있는지 비교할 수 있습니다.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>항목 하나만 볼 때</th><th class="r">AUC</th><th>방향</th></tr></thead>
+        <tbody>
+          <tr class="hl"><td>학력 지수, 직전 달</td><td class="r num">0.661</td><td>낮을수록 이탈</td></tr>
+          <tr class="hl"><td>공부 횟수, 직전 달</td><td class="r num">0.648</td><td>낮을수록 이탈</td></tr>
+          <tr><td>학력 지수, 두 달 전</td><td class="r num">0.596</td><td>낮을수록 이탈</td></tr>
+          <tr><td>나이</td><td class="r num">0.594</td><td>많을수록 이탈</td></tr>
+          <tr><td>시험 점수 (가장 나은 것, 시험 3 직전 달)</td><td class="r num">0.540</td><td>낮을수록 이탈</td></tr>
+          <tr><td>이용 기간</td><td class="r num">0.526</td><td>거의 무관</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="sub">
+    <h3>시험 점수는 생각보다 약하다</h3>
+    <p>처음 세운 가설은 "공부 경험이 나쁘면 그만둔다, 그러니 시험 성적이 떨어지는 사람이 그만둘 것이다"였습니다. 시험 세 개의 합(총점)과 달마다 점수가 얼마나 변했는지를 비교했습니다.</p>
+    <figure class="wide">
+      <div class="plate">@@img:total_by_month@@</div>
+      <figcaption><b>달별 시험 총점.</b> 그만둔 회원의 총점은 세 달 동안 <span class="num">300 → 299 → 293</span>으로 내려갑니다. 직전 달의 차이(<span class="num">6</span>점)는 우연으로 보기 어려운 수준입니다(p = 0.004). 하지만 상자들이 거의 겹쳐 있어서, 이 점수만 보고 사람을 구분하기는 어렵습니다.</figcaption>
+    </figure>
+    <p>달마다 점수가 오르내린 폭도 그만둔 회원과 남은 회원이 거의 같았습니다(차이 약 0.5점, 우연으로 설명 가능한 수준). 성적 추이 가설은 약하게만 맞았습니다.</p>
+  </div>
+
+  <div class="sub">
+    <h3>시험을 안 보는 것이 신호다</h3>
+    <p>점수 대신 <b>시험을 봤는지</b>를 보니 차이가 컸습니다. 기록이 비어 있는 비율(빈칸 비율)을 항목별로 비교했습니다.</p>
+    <figure>
+      <div class="plate">@@img:missing_rate@@</div>
+      <figcaption><b>항목별 빈칸 비율.</b> <span class="churn">주황</span>이 그만둔 회원, <span class="stay">파랑</span>이 남은 회원입니다. 직전 달 시험 3은 그만둔 회원의 <span class="num">35.9%</span>가 보지 않았지만, 남은 회원은 <span class="num">19.2%</span>만 보지 않았습니다. 시험 2도 <span class="num">22.0%</span> 대 <span class="num">10.3%</span>입니다.</figcaption>
+    </figure>
+    <p class="note"><b>함정 하나.</b> 가입한 지 1–2개월 된 회원은 두세 달 전 기록이 아예 없습니다. 이 회원들은 "시험을 안 본 것"으로 잡히는데, 마침 그만두는 비율도 낮습니다(1–2%). 그대로 비교하면 효과가 흐려지거나 반대로 보입니다. 그래서 3개월 기록이 모두 있는 회원 <span class="num">26,123</span>명만 따로 다시 비교했습니다.</p>
+    <figure class="wide">
+      <div class="plate">@@img:missing_by_feature@@</div>
+      <figcaption><b>시험별·달별로, 본 회원과 안 본 회원의 이탈률.</b> 세로선은 95% 신뢰구간(값이 있을 법한 범위), 위의 "×"는 안 본 회원이 몇 배 더 그만두는지입니다. 아래 줄(3개월 기록 회원)에서 <b>시험 2·3을 안 본 회원은 모든 달에서 1.6–2.3배</b> 더 그만두고, 직전 달일수록 차이가 큽니다. <b>시험 1은 안 봐도 차이가 없습니다.</b></figcaption>
+    </figure>
+    <p>가장 위험한 조합은 직전 달 시험 2와 세 달 내내 시험 3을 안 본 회원으로, 이탈률이 <span class="num">10.6%</span>(전체 평균의 약 4배)입니다. 시험 2·3이 어렵거나 심화 과목이어서 여기서 손을 놓는 것이 그만두기 전의 신호일 수 있습니다. 다만 데이터에 과목 정보가 없어서 확인할 수는 없습니다.</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="no">4</span>모델을 어떻게 만들었나</h2>
+  <p>"모델"은 회원 기록을 넣으면 그만둘 위험 점수를 내놓는 계산 규칙입니다. 규칙은 사람이 정하지 않고, 정답이 붙은 과거 회원 기록에서 컴퓨터가 찾아냅니다. 단계마다 넣는 정보와 규칙의 형태를 바꾸며 성능을 쟀습니다.</p>
+
+  <figure class="chart">
+    @@chart:models@@
+    <figcaption><b>단계별 성능(AUC).</b> 막대는 동전 던지기(<span class="num">0.5</span>)에서 얼마나 나아졌는지를 보여 줍니다. 25번 채점한 평균입니다.</figcaption>
+  </figure>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>단계</th><th>넣은 정보</th><th>규칙의 형태</th><th class="r">AUC</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>시험 9개(3종 × 3달)를 봤는지 여부만</td><td>항목끼리의 조합까지 보는 단순한 식</td><td class="r num">0.609</td></tr>
+        <tr><td>2</td><td>+ 이용 기간</td><td>같음</td><td class="r num">0.621</td></tr>
+        <tr><td>3</td><td>나이를 뺀 모든 기록 + 각 항목이 비었는지</td><td>신경망 하나</td><td class="r num">0.673</td></tr>
+        <tr><td>4</td><td>같음</td><td>신경망 5개의 평균</td><td class="r num">0.680</td></tr>
+        <tr class="hl"><td>5</td><td>같음</td><td>신경망 + 직선식 + 결정나무 모음의 의견 합치기</td><td class="r num">0.687</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sub">
+    <h3>각 단계에서 배운 것</h3>
+    <p><b>1–2단계.</b> 시험을 봤는지만으로 <span class="num">0.61</span>까지 갑니다. 이용 기간을 넣자 <span class="num">0.62</span>가 됐는데, 이용 기간 자체는 거의 쓸모가 없습니다(혼자서는 <span class="num">0.526</span>). 모델이 이용 기간을 보고 "기록이 없어서 빈칸인 신규 회원"과 "시험을 건너뛴 회원"을 구분하게 된 덕분으로 보입니다.</p>
+    <p><b>3단계.</b> 공부 횟수와 학력 지수까지 모두 넣자 <span class="num">0.67</span>로 크게 올랐습니다. 오른 몫의 대부분은 직전 달 학력 지수 하나로 설명됩니다. 빈칸은 항목의 평균값으로 채우고, 대신 "이 항목이 비어 있었다"는 표시를 따로 넣어 시험을 안 본 정보도 잃지 않게 했습니다.</p>
+    <p><b>4–5단계.</b> 같은 정보로 규칙의 형태만 바꿨습니다. 신경망(복잡한 곡선 규칙)이 직선식보다 낫지 않았는데, 그만둔 회원이 868명뿐이라 복잡한 규칙을 뒷받침할 사례가 부족하기 때문입니다. 대신 성격이 다른 모델들의 의견을 합치는 <b>앙상블</b>이 효과가 있었습니다. 특히 결정나무 모음(질문을 이어 가며 나누는 방식)을 섞을 때 올랐습니다. 서로 다른 방식으로 틀리는 모델일수록 합쳤을 때 실수가 상쇄됩니다.</p>
+  </div>
+
+  <div class="sub">
+    <h3>학습 목표를 AUC에 맞추기</h3>
+    <p>보통 모델은 "한 사람씩 맞혔는지"를 기준으로 학습합니다. 이번에는 평가 기준인 AUC를 직접 학습 목표로 삼았습니다. AUC는 "맞다/틀리다"로 딱 끊기는 계산이라 그대로는 컴퓨터가 조금씩 고쳐 나갈 방향을 알 수 없습니다. 그래서 끊기는 부분을 부드러운 곡선으로 바꾼 <b>부드러운 AUC</b>를 만들어, 그만둔 회원의 점수가 남은 회원보다 높아지는 쪽으로 규칙을 조금씩 고치게 했습니다.</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="no">5</span>정리와 다음 단계</h2>
+  <p>회원 기록만으로 그만둘 사람을 <b>동전 던지기보다 확실히 낫게</b>, 그러나 확신할 정도는 아니게 가려낼 수 있습니다(AUC <span class="num">0.687</span>). 쓸 만한 신호는 두 가지입니다.</p>
+  <ul>
+    <li><b>직전 달에 공부 횟수와 학력 지수가 떨어진 회원</b></li>
+    <li><b>시험 2·3을 건너뛰기 시작한 회원</b>, 특히 직전 달에</li>
+  </ul>
+  <p>둘 다 그만두기 한두 달 전에 보이므로, 이런 회원에게 먼저 연락하는 방식으로 쓸 수 있습니다.</p>
+
+  <div class="sub">
+    <h3>조심할 점</h3>
+    <ul>
+      <li>그만둔 회원이 868명뿐이라 모델 간 차이(<span class="num">0.01</span> 이하)는 채점마다 흔들리는 폭보다 작습니다. 순위는 "25번 중 몇 번 이겼나"로만 판단했습니다.</li>
+      <li>최종 조합은 15가지 조합 중 가장 좋은 것을 같은 채점 결과로 골랐기 때문에, 새 회원에게 쓰면 점수가 조금 낮게 나올 수 있습니다.</li>
+      <li>모델 설정값은 거의 조정하지 않았습니다.</li>
+    </ul>
+  </div>
+  <div class="sub">
+    <h3>다음에 해 볼 것</h3>
+    <ul>
+      <li>나이 넣기: 혼자서 <span class="num">0.594</span>로 시험 점수보다 강합니다. 다만 성인 나이 같은 튀는 값을 먼저 정리해야 합니다.</li>
+      <li>"세 달 전 대비 직전 달에 얼마나 떨어졌나"를 직접 계산해 넣기</li>
+      <li>시험 2·3을 안 본 횟수, 기록이 있는 달 수를 명시적으로 넣기</li>
+      <li>결정나무 모음의 비중을 늘리고 설정 조정하기</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2><span class="no">부록</span>용어 풀이</h2>
+  <dl class="terms">
+    <dt>이탈 / 잔류</dt><dd>서비스를 그만둔 회원 / 계속 다니는 회원.</dd>
+    <dt>M1 · M2 · M3</dt><dd>직전 달 · 두 달 전 · 세 달 전.</dd>
+    <dt>AUC</dt><dd>이탈 회원 한 명과 잔류 회원 한 명을 뽑았을 때 모델이 이탈 회원을 더 위험하다고 고를 확률. 0.5는 동전 던지기, 1.0은 완벽.</dd>
+    <dt>교차검증</dt><dd>학습에 쓰지 않은 회원으로만 채점하도록 데이터를 나눠 여러 번 채점하는 방법.</dd>
+    <dt>중앙값</dt><dd>값을 줄 세웠을 때 한가운데 값. 튀는 값에 덜 흔들리는 평균.</dd>
+    <dt>상자 그림</dt><dd>상자는 가운데 50% 회원의 범위, 상자 안 선은 중앙값, 수염 밖 점은 튀는 값.</dd>
+    <dt>빈칸 (결측)</dt><dd>기록이 없는 칸. 여기서는 대부분 시험을 보지 않았거나, 가입 전이라 기록이 없는 경우.</dd>
+    <dt>p값</dt><dd>실제로는 차이가 없는데 우연히 이만큼의 차이가 나올 확률. 0.05보다 작으면 우연으로 보기 어렵다고 판단.</dd>
+    <dt>신뢰구간</dt><dd>표본의 크기를 감안할 때 실제 값이 있을 법한 범위.</dd>
+    <dt>신경망</dt><dd>여러 층의 계산을 거쳐 복잡한 곡선 형태의 규칙을 만드는 모델.</dd>
+    <dt>직선식 (로지스틱 회귀)</dt><dd>각 항목에 가중치를 곱해 더하는 단순한 규칙.</dd>
+    <dt>결정나무 모음</dt><dd>"학력 지수가 50보다 낮은가?" 같은 질문을 이어 가며 회원을 나누는 나무 여러 그루를 쌓은 모델.</dd>
+    <dt>앙상블</dt><dd>여러 모델의 점수를 합쳐 하나의 판단을 내리는 방법. 여기서는 각 모델이 매긴 위험 순위를 평균했다.</dd>
+  </dl>
+</section>
+
+</div>

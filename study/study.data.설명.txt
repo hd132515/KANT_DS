@@ -1,0 +1,10 @@
+ID : 레코드 구분자
+survived : 이탈여부,   0 이탈 // 1 잔류
+Month: 잔류기간 (개월)
+AGE : 회원 나이
+### M1 : 중단 직전월,  M2 : 중단 전전월, M3 : 중단 전전전월
+StudyCnt_M1, StudyCntCnt_M2, StudyCntCnt_M3 : 학습 횟수
+StudyIndex_M1, StudyIndex_M2, StudyIndex_M3 : 학력 지수 (높을 수록 높은 학력)
+Exam1_M1, Exam1_M2, Exam1_M3 : 시험 1
+Exam2_M1, Exam2_M2, Exam2_M3 : 시험 2
+Exam3_M1, Exam3_M2, Exam3_M3 : 시험 3

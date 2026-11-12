@@ -1,0 +1,12 @@
+### study data
+# 데이터 로드
+df_study = pd.read_csv('/content/Study.공유.csv')
+
+df_study.head()
+
+# 설명변수, 정답 (Target)변수 설정
+features = ['Month', 'AGE', 'StudyCnt_M1', 'StudyIndex_M1', 'Exam1_M1', 'Exam1_M2', 'Exam1_M3']
+target = 'survived'
+
+X = df_study[features]
+y = df_study[target]

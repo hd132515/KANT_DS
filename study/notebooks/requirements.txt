@@ -1,0 +1,10 @@
+# churn_report.ipynb 실행용 (Python 3.10 이상)
+# 검증한 환경: Python 3.12.12, numpy 2.3.5, pandas 3.0.3, scipy 1.18.0, scikit-learn 1.9.0,
+#              torch 2.13.0 (CPU), matplotlib 3.11.0, ipykernel 7.3.0 — macOS (Apple M4)
+numpy>=1.26
+pandas>=2.2
+scipy>=1.11
+scikit-learn>=1.4
+torch>=2.1
+matplotlib>=3.9
+jupyterlab>=4
