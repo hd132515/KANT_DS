@@ -1,0 +1,52 @@
+========= Problem 1 =========
+정상 처리 케이스
+first row: ID        1.0
+size     34.0
+year      5.0
+price     5.0
+Name: 0, dtype: float64
+total df length: 10
+first row price dtype: <class 'numpy.float64'>
+
+오류 처리 케이스
+파일명과 업로드 여부를 확인하세요.
+
+========= Problem 2 =========
+Loaded rows: 10
+Excluded rows: 0
+
+========= Problem 3 =========
+[ERROR](row_id: 101) No keys: ['size'] / Not convertable: ['size']
+[ERROR](row_id: 102) No items: ['price'] / Not convertable: ['price']
+[ERROR](row_id: 103) Not convertable: ['size']
+selected houses:3, 4, 5, 6, 7, 9, 10, 104
+number of selected houses: 8
+
+========= Problem 4 =========
+house ID: 1  / per unit price: 0.14705882352941177
+house ID: 2  / per unit price: 0.08
+house ID: 3  / per unit price: 0.13333333333333333
+house ID: 4  / per unit price: 0.07894736842105263
+house ID: 5  / per unit price: 0.06818181818181818
+house ID: 6  / per unit price: 0.08333333333333333
+house ID: 7  / per unit price: 0.07692307692307693
+house ID: 8  / per unit price: 0.1
+house ID: 9  / per unit price: 0.08823529411764706
+house ID: 10  / per unit price: 0.058823529411764705
+unit_price(4, 40) = 0.1
+unit_price("4", "40") = 0.1
+오류: 크기가 0 이하입니다.
+unit_price(4, 0) = None
+오류: 가격이 0 이하입니다.
+unit_price(-4, 40) = None
+값 오류: 숫자로 변환할 수 없는 문자열 입니다.
+unit_price("오류", 40) = None
+자료형 오류: 숫자 또는 숫자 형태의 문자열을 입력하세요.
+unit_price(None, 40) = None
+unit_price(6, 30) = 0.2
+
+========= Problem 5 =========
+IDs(order): [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+Years(no-dup): {2, 5, 12, 18, 19, 20, 22}
+Price of ID 3: 4
+Searched house tuples:  ({'ID': 3, 'size': 30, 'year': 2, 'price': 4}, {'ID': 4, 'size': 38, 'year': 20, 'price': 3}, {'ID': 5, 'size': 44, 'year': 12, 'price': 3}, {'ID': 6, 'size': 48, 'year': 18, 'price': 4}, {'ID': 7, 'size': 52, 'year': 22, 'price': 4}, {'ID': 9, 'size': 34, 'year': 18, 'price': 3}, {'ID': 10, 'size': 34, 'year': 22, 'price': 2})
